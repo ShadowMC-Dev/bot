@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ShadowSystem Dashboard</title>
+  <style>
+    body { background:#0d0d0d; color:white; font-family:sans-serif; text-align:center; }
+    h1 { color:#e60000; text-shadow:0 0 10px #e60000; animation: pulse 2s infinite; }
+    .bot-card { background:#1a1a1a; padding:20px; margin:10px; border-radius:10px; box-shadow:0 0 10px #e60000; }
+    button { padding:10px 20px; margin:5px; border:none; border-radius:5px; background:#e60000; color:white; cursor:pointer; }
+    button:hover { background:#cc0000; }
+    @keyframes pulse { 0% { text-shadow:0 0 5px #e60000; } 50% { text-shadow:0 0 20px #ff1a1a; } 100% { text-shadow:0 0 5px #e60000; } }
+  </style>
+</head>
+<body>
+  <h1>🔥 ShadowSystem Dashboard 🔥</h1>
+  <input id="secret" placeholder="Enter admin secret">
+  <button onclick="unlock()">Unlock</button>
+  <div id="dashboard" style="display:none;"></div>
+
+  <script>
+    const API = "https://shadowsystem-backend.onrender.com/api"; // replace with your backend URL
+    let secret = "";
+
+    function unlock() {
+      secret = document.getElementById("secret").value;
+      loadBots();
+    }
+
+    async function loadBots() {
+      const res = await fetch(`${API}/bots`, { headers: { Authorization: "Bearer " + secret }});
+      if (!res.ok) return alert("Wrong secret or error");
+      const bots = await res.json();
+      const dash = document.getElementById("dashboard");
+      dash.style.display = "block";
+      dash.innerHTML = "";
+      Object.keys(bots).forEach(name => {
+        dash.innerHTML += `
+          <div class="bot-card">
+            <h2>${name}</h2>
+            <p>Status: ${bots[name].running ? "🟢 Running" : "🔴 Stopped"}</p>
+            <button onclick="startBot('${name}')">Start</button>
+            <button onclick="stopBot('${name}')">Stop</button>
+          </div>
+        `;
+      });
+    }
+
+    async function startBot(name) {
+      await fetch(`${API}/bots/${name}/start`, { method:"POST", headers:{ Authorization:"Bearer " + secret }});
+      loadBots();
+    }
+
+    async function stopBot(name) {
+      await fetch(`${API}/bots/${name}/stop`, { method:"POST", headers:{ Authorization:"Bearer " + secret }});
+      loadBots();
+    }
+  </script>
+</body>
+</html>
